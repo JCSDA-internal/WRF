@@ -33,6 +33,7 @@ $sw_mach = "ARCH" ;         # ARCH will match any
 $sw_wrf_core = "" ;
 $sw_da_core = "-DDA_CORE=\$\(WRF_DA_CORE\)" ;
 $sw_wrfplus_core = "-DWRFPLUS=\$\(WRF_PLUS_CORE\)" ;
+$sw_jedi_core = "-DJEDI=\$\(WRF_JEDI_CORE\)" ;
 $sw_nmm_core = "-DNMM_CORE=\$\(WRF_NMM_CORE\)" ;
 $sw_em_core = "-DEM_CORE=\$\(WRF_EM_CORE\)" ;
 $sw_dmparallel = "" ;
@@ -141,6 +142,7 @@ while ( substr( $ARGV[0], 0, 1 ) eq "-" )
       $sw_em_core = "-DEM_CORE=1" ;
       $sw_da_core = "-DDA_CORE=0" ;
       $sw_wrfplus_core = "-DWRFPLUS=0" ;
+      $sw_jedi_core = "-DJEDI=0" ;
       $sw_nmm_core = "-DNMM_CORE=0" ;
     }
     if ( index ( $sw_wrf_core , "WRF_PLUS_CORE" ) > -1 ) 
@@ -148,6 +150,16 @@ while ( substr( $ARGV[0], 0, 1 ) eq "-" )
       $sw_em_core = "-DEM_CORE=1" ;
       $sw_da_core = "-DDA_CORE=0" ;
       $sw_wrfplus_core = "-DWRFPLUS=1" ;
+      $sw_jedi_core = "-DJEDI=0" ;
+      $sw_nmm_core = "-DNMM_CORE=0" ;
+      $sw_dfi_radar = "-DDFI_RADAR=0" ;
+    }
+    if ( index ( $sw_wrf_core , "WRF_JEDI_CORE" ) > -1 ) 
+    {
+      $sw_em_core = "-DEM_CORE=1" ;
+      $sw_da_core = "-DDA_CORE=0" ;
+      $sw_wrfplus_core = "-DWRFPLUS=1" ;
+      $sw_jedi_core = "-DJEDI=1" ;
       $sw_nmm_core = "-DNMM_CORE=0" ;
       $sw_dfi_radar = "-DDFI_RADAR=0" ;
     }
@@ -156,6 +168,7 @@ while ( substr( $ARGV[0], 0, 1 ) eq "-" )
       $sw_em_core = "-DEM_CORE=1" ;
       $sw_da_core = "-DDA_CORE=1" ;
       $sw_wrfplus_core = "-DWRFPLUS=0" ;
+      $sw_jedi_core = "-DJEDI=0" ;
       $sw_nmm_core = "-DNMM_CORE=0" ;
     }
     if ( index ( $sw_wrf_core , "4D_DA_CORE" ) > -1 ) 
@@ -175,6 +188,7 @@ while ( substr( $ARGV[0], 0, 1 ) eq "-" )
       $sw_em_core = "-DEM_CORE=0" ;
       $sw_da_core = "-DDA_CORE=0" ;
       $sw_wrfplus_core = "-DWRFPLUS=0" ;
+      $sw_jedi_core = "-DJEDI=0" ;
       $sw_nmm_core = "-DNMM_CORE=1" ;
     }
   }
@@ -325,7 +339,7 @@ while ( substr( $ARGV[0], 0, 1 ) eq "-" )
 
 $validresponse = 0 ;
 
-if ( ($sw_wrf_core eq "WRF_PLUS_CORE") || ($sw_wrf_core eq "4D_DA_CORE") ) 
+if ( ($sw_wrf_core eq "WRF_PLUS_CORE") || ($sw_wrf_core eq "WRF_JEDI_CORE") || ($sw_wrf_core eq "4D_DA_CORE") ) 
    { @platforms = qw ( serial dmpar ) ; }
    else
    { @platforms = qw ( serial smpar dmpar dm+sm ) ; }
@@ -460,6 +474,7 @@ while ( <CONFIGURE_DEFAULTS> )
     $_ =~ s/CONFIGURE_CPPFLAGS/$sw_cfl/g ;
     $_ =~ s/CONFIGURE_4DVAR_FLAG/$sw_4dvar_flag/g ;
     $_ =~ s/CONFIGURE_WRFPLUS_PATH/$sw_wrfplus_path/g ;
+    $_ =~ s/CONFIGURE_JEDI_PATH/$sw_jedi_path/g ;
     $_ =~ s/CONFIGURE_CRTM_FLAG/$sw_crtm_flag/g ;
     $_ =~ s/CONFIGURE_RTTOV_FLAG/$sw_rttov_flag/g ;
     $_ =~ s/CONFIGURE_RTTOV_INC/$sw_rttov_inc/g ;
@@ -786,6 +801,7 @@ while ( <ARCH_PREAMBLE> )
   $_ =~ s:CONFIGURE_EM_CORE:$sw_em_core:g ;
   $_ =~ s:CONFIGURE_DA_CORE:$sw_da_core:g ;
   $_ =~ s:CONFIGURE_WRFPLUS_CORE:$sw_wrfplus_core:g ;
+  $_ =~ s:CONFIGURE_JEDI_CORE:$sw_jedi_core:g ;
   $_ =~ s:CONFIGURE_NMM_CORE:$sw_nmm_core:g ;
   $_ =~ s/CONFIGURE_CONFIG_LINE/$sw_config_line/g ;
   $_ =~ s/CONFIGURE_CONFIG_NUM/Compiler choice: $response_opt/g ;

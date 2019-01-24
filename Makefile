@@ -124,6 +124,8 @@ wrf : framework_only
 	@echo "build started:   $(START_OF_COMPILE)"
 	@echo "build completed:" `date`
 
+jedi	: wrfplus
+
 wrfplus : configcheck
 	@/bin/rm -f real.exe  > /dev/null 2>&1
 	@/bin/rm -f tc.exe    > /dev/null 2>&1
