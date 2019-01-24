@@ -52,8 +52,13 @@ CONTAINS
             CALL nl_get_start_second(nestid,s_s)  ; CALL nl_get_end_second(nestid,e_s)
             CALL WRFU_TimeSet( nest_start,YY=s_yr,MM=s_mm,DD=s_dd,H=s_h,M=s_m,S=s_s,rc=rc)
             CALL WRFU_TimeSet( nest_stop,YY=e_yr,MM=e_mm,DD=e_dd,H=e_h,M=e_m,S=e_s,rc=rc)
+#if ( JEDI != 1 )
+            IF ( nest_start .LE. domain_get_current_time(head_grid) .AND. &
+                 nest_stop  .GT. domain_get_current_time(head_grid) ) THEN
+#else
             IF ( nest_start .LE. head_grid_current_time .AND. &
                  nest_stop  .GT. head_grid_current_time ) THEN
+#endif
               DO kid = 1 , max_nests
                 IF ( .NOT. ASSOCIATED ( parent%nests(kid)%ptr ) ) THEN
                   active_domain( nestid ) = .true.

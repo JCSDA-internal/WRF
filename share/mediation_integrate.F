@@ -2077,7 +2077,11 @@ END SUBROUTINE med_filter_out
 
 SUBROUTINE med_latbound_in ( grid , config_flags )
   ! Driver layer
+#if ( JEDI != 1 )
+   USE module_domain    , ONLY : domain , domain_clock_get, head_grid
+#else
    USE module_domain    , ONLY : domain , domain_clock_get, head_grid_dfi_stage
+#endif
    USE module_io_domain
    USE module_timing
    USE module_configure , ONLY : grid_config_rec_type
@@ -2177,7 +2181,11 @@ integer myproc,i,j,k
        CALL input_boundary ( grid%lbc_fid, grid , config_flags , ierr )
 
 ! #if (EM_CORE == 1)
+#if ( JEDI != 1 )
+       IF ( (config_flags%dfi_opt .NE. DFI_NODFI) .AND. (head_grid%dfi_stage .NE. DFI_FST) ) THEN
+#else
        IF ( (config_flags%dfi_opt .NE. DFI_NODFI) .AND. (head_grid_dfi_stage .NE. DFI_FST) ) THEN
+#endif
           CALL wrf_debug( 100 , 'med_latbound_in: closing boundary file ' )
           CALL close_dataset ( grid%lbc_fid , config_flags , "DATASET=BOUNDARY" )
        END IF

@@ -383,12 +383,16 @@ CONTAINS
    !   to indicate in Setup_Timekeeping that we want forecast start and
    !   end times at this point 
    IF ( head_grid%dfi_opt .NE. DFI_NODFI ) head_grid%dfi_stage = DFI_SETUP
+#if ( JEDI == 1 )
    head_grid_dfi_stage=head_grid%dfi_stage
    head_grid_id=head_grid%id
+#endif
 ! #endif
 
    CALL Setup_Timekeeping (head_grid)
+#if ( JEDI == 1 )
    head_grid_current_time=domain_get_current_time(head_grid)
+#endif
 
 !<DESCRIPTION>
 ! The head grid is initialized with read-in data through the call to <a
@@ -431,8 +435,10 @@ CONTAINS
    ! set default values for subtimes
    head_grid%start_subtime = domain_get_start_time ( head_grid )
    head_grid%stop_subtime = domain_get_stop_time ( head_grid )
+#if ( JEDI == 1 )
    head_grid_start_subtime = domain_get_start_time ( head_grid )
    head_grid_stop_subtime = domain_get_stop_time ( head_grid )
+#endif
 
  IF ( domain_active_this_task(1) ) THEN
    !  For EM (but not DA), if this is a DFI run, we can allocate some space.  We are
@@ -877,7 +883,7 @@ IF ( config_flags%check_TL .or. config_flags%check_AD ) THEN
    CALL allocate_grid ( )
 
    !$OMP PARALLEL DO    &
-   !$OMP DEFAULT (SHARED) PRIVATE ( ij )        
+   !$OMP DEFAULT (SHARED) PRIVATE ( ij )
    DO ij = 1 , head_grid%num_tiles
       CALL copy_grid_to_s ( head_grid , &
                             head_grid%i_start(ij), head_grid%i_end(ij),                &
@@ -1520,7 +1526,11 @@ ENDIF
    CALL start_domain ( head_grid , .TRUE. )
 
    IF ( ASSOCIATED(xtraj_tail) ) xtraj_pointer => xtraj_tail
+#if ( JEDI != 1 )
+   CALL integrate ( head_grid )
+#else
    CALL integrate ( 1, head_grid )
+#endif
 
    IF ( .NOT. config_flags%trajectory_io ) THEN
       CALL nl_set_io_form_auxhist7( head_grid%id, io_auxh7 )
@@ -1788,7 +1798,11 @@ ENDIF
       CALL nl_set_io_form_auxhist8( head_grid%id, 0 )
    ENDIF
 
+#if ( JEDI != 1 )
+   CALL integrate ( head_grid )
+#else
    CALL integrate ( 1, head_grid )
+#endif
 
    IF ( .NOT. config_flags%trajectory_io ) THEN
       CALL nl_set_io_form_auxhist8( head_grid%id, io_auxh8 )
@@ -2074,7 +2088,11 @@ ENDIF
    head_grid%itimestep = 0
    CALL start_domain ( head_grid , .TRUE. )
 #endif
+#if ( JEDI != 1 )
+   CALL integrate ( head_grid )
+#else
    CALL integrate ( 1, head_grid )
+#endif
 
 #if (WRFPLUS == 1)
    CALL nl_set_io_form_auxhist7( head_grid%id, io_auxh7 )

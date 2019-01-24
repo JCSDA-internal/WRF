@@ -45,7 +45,7 @@ MODULE module_domain
 
    TYPE(domain) , POINTER :: head_grid , new_grid , next_grid , old_grid
 
-#if (JEDI == 1)
+#if ( JEDI == 1 )
   ! for JEDI application, need to set some global variables to make head_grid
   ! local
 
@@ -416,6 +416,7 @@ CONTAINS
 
    INTEGER spec_bdy_width
 
+#if ( JEDI == 1 )
    INTERFACE
       subroutine wrf_dm_patch_domain( id , domdesc , parent, parent_id,parent_domdesc,&
                              sd1 , ed1 , sp1 , ep1 , sm1 , em1 , &
@@ -443,7 +444,7 @@ CONTAINS
       TYPE(domain), POINTER :: parent
       end subroutine wrf_dm_patch_domain
    END INTERFACE
-
+#endif
 
    CALL nl_get_spec_bdy_width( 1, spec_bdy_width )
 
@@ -506,7 +507,11 @@ CONTAINS
 ! case it generates a circular USE reference, since module_dm uses
 ! module_domain.  JM 20020416
 
-   CALL wrf_dm_patch_domain( id , domdesc , parent, parent_id, parent_domdesc,&
+  #if ( JEDI != 1 )
+   CALL wrf_dm_patch_domain( id , domdesc , parent_id , parent_domdesc , &
+  #else
+   CALL wrf_dm_patch_domain( id , domdesc , parent , parent_id , parent_domdesc , &
+  #endif
                              sd1 , ed1 , sp1 , ep1 , sm1 , em1 , &
                              sd2 , ed2 , sp2 , ep2 , sm2 , em2 , &
                              sd3 , ed3 , sp3 , ep3 , sm3 , em3 , &
@@ -1101,7 +1106,11 @@ CONTAINS
       IMPLICIT NONE
 #include "streams.h"
       INTEGER              , INTENT(IN  )  :: id
+#if ( JEDI != 1 )
+      TYPE(domain), POINTER       :: grid
+#else
       TYPE(domain)                :: grid
+#endif
       ! Local
       TYPE(fieldlist), POINTER :: p, q
       INTEGER, PARAMETER :: read_unit = 10
@@ -1604,7 +1613,11 @@ CONTAINS
 !  (so the one in the middle can be removed).  Then the domain itself is 
 !  DEALLOCATEd via a call to domain_destroy().  
 
+#if ( JEDI != 1 )
+   SUBROUTINE dealloc_space_domain ( id )
+#else
    SUBROUTINE dealloc_space_domain ( id, head_grid_in )
+#endif
       
       IMPLICIT NONE
 
@@ -1620,8 +1633,13 @@ CONTAINS
 
       !  Initializations required to start the routine.
 
+#if ( JEDI != 1 )
+      grid => head_grid
+      old_grid => head_grid
+#else
       grid => head_grid_in
       old_grid => head_grid_in
+#endif
       found = .FALSE.
 
       !  The identity of the domain to delete is based upon the "id".
@@ -3182,12 +3200,23 @@ END SUBROUTINE get_current_grid_name
 
 ! version of this routine that can be called from set_scalar_indices_from_config in
 ! module_configure, which can not USE module_domain without creating a circular use assocaition
-   SUBROUTINE modify_io_masks ( grid )
-     USE module_domain, ONLY : domain, modify_io_masks1 !, find_grid_by_id
+#if ( JEDI !=1 )
+   SUBROUTINE modify_io_masks ( id )
+     USE module_domain, ONLY : domain, modify_io_masks1, head_grid, find_grid_by_id
      IMPLICIT NONE
-     TYPE(domain) :: grid
-!     CALL find_grid_by_id( id, head_grid, grid )
-      CALL modify_io_masks1( grid, grid%id ) 
+     INTEGER, INTENT(IN) :: id	
+     TYPE(domain), POINTER :: grid
+     CALL find_grid_by_id( id, head_grid, grid )
+     IF ( ASSOCIATED( grid ) ) CALL modify_io_masks1( grid, grid%id ) 
      RETURN 
    END SUBROUTINE modify_io_masks
+#else
+   SUBROUTINE modify_io_masks ( grid )
+     USE module_domain, ONLY : domain, modify_io_masks1
+     IMPLICIT NONE
+     TYPE(domain) :: grid
+     CALL modify_io_masks1( grid, grid%id ) 
+     RETURN 
+   END SUBROUTINE modify_io_masks
+#endif
 
