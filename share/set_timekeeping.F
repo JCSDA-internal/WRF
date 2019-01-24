@@ -173,7 +173,7 @@ SUBROUTINE Setup_Timekeeping ( grid )
             !   head_grid since the dfi time window is the same for all 
             !   domains.
 
-            run_length = head_grid%start_subtime - head_grid%stop_subtime
+            run_length = head_grid_start_subtime - head_grid_stop_subtime
             CALL WRFU_TimeIntervalGet( run_length, S=run_seconds, rc=rc )
 ! What about fractional seconds?
             run_seconds = run_seconds / 2
@@ -232,7 +232,7 @@ SUBROUTINE Setup_Timekeeping ( grid )
    IF ( (grid%dfi_opt .EQ. DFI_NODFI) .OR. (grid%dfi_stage .EQ. DFI_SETUP) .OR. (grid%dfi_stage .EQ. DFI_FST)) THEN
 ! #endif
 
-      IF ( grid%id .EQ. head_grid%id .AND. &
+      IF ( grid%id .EQ. head_grid_id .AND. &
            ( run_days .gt. 0 .or. run_hours .gt. 0 .or. run_minutes .gt. 0 .or. run_seconds .gt. 0 )) THEN
         CALL WRFU_TimeIntervalSet ( run_length , D=run_days, H=run_hours, M=run_minutes, S=run_seconds, rc=rc )
 ! #if (EM_CORE == 1)
@@ -350,7 +350,7 @@ SUBROUTINE Setup_Timekeeping ( grid )
      padding_interval = zero_time - forever
    ENDIF
 
-   IF ( grid%id .EQ. head_grid%id ) THEN
+   IF ( grid%id .EQ. head_grid_id ) THEN
       CALL nl_get_time_step ( 1, time_step )
       CALL nl_get_time_step_fract_num( 1, time_step_fract_num )
       CALL nl_get_time_step_fract_den( 1, time_step_fract_den )
@@ -392,7 +392,7 @@ SUBROUTINE Setup_Timekeeping ( grid )
 
    ! Set default value for SIMULATION_START_DATE.  
    ! This is overwritten later in input_wrf(), if needed.  
-   IF ( grid%id .EQ. head_grid%id ) THEN
+   IF ( grid%id .EQ. head_grid_id ) THEN
       CALL nl_set_simulation_start_year   ( 1 , start_year   )
       CALL nl_set_simulation_start_month  ( 1 , start_month  )
       CALL nl_set_simulation_start_day    ( 1 , start_day    )

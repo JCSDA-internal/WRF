@@ -45,6 +45,16 @@ MODULE module_domain
 
    TYPE(domain) , POINTER :: head_grid , new_grid , next_grid , old_grid
 
+#if (JEDI == 1)
+  ! for JEDI application, need to set some global variables to make head_grid
+  ! local
+
+   TYPE (WRFU_Time) :: head_grid_current_time 
+   INTEGER :: head_grid_id
+   INTEGER :: head_grid_dfi_stage 
+   TYPE (WRFU_Time) :: head_grid_start_subtime , head_grid_stop_subtime
+#endif
+
    !  To facilitate an easy integration of each of the domains that are on the
    !  same level, we have an array for the head pointer for each level.  This
    !  removed the need to search through the linked list at each time step to
@@ -406,6 +416,35 @@ CONTAINS
 
    INTEGER spec_bdy_width
 
+   INTERFACE
+      subroutine wrf_dm_patch_domain( id , domdesc , parent, parent_id,parent_domdesc,&
+                             sd1 , ed1 , sp1 , ep1 , sm1 , em1 , &
+                             sd2 , ed2 , sp2 , ep2 , sm2 , em2 , &
+                             sd3 , ed3 , sp3 , ep3 , sm3 , em3 , &
+                                         sp1x , ep1x , sm1x , em1x , &
+                                         sp2x , ep2x , sm2x , em2x , &
+                                         sp3x , ep3x , sm3x , em3x , &
+                                         sp1y , ep1y , sm1y , em1y , &
+                                         sp2y , ep2y , sm2y , em2y , &
+                                         sp3y , ep3y , sm3y , em3y , &
+                             bdx , bdy )
+      USE module_domain_type, ONLY : domain
+      IMPLICIT NONE
+
+      INTEGER  :: sd1 , ed1 , sd2 , ed2 , sd3 , ed3 , bdx , bdy
+      INTEGER  :: sp1 , ep1 , sp2 , ep2 , sp3 , ep3 , &
+                            sm1 , em1 , sm2 , em2 , sm3 , em3
+      INTEGER               :: sp1x , ep1x , sp2x , ep2x , sp3x , ep3x , &
+                            sm1x , em1x , sm2x , em2x , sm3x , em3x
+      INTEGER               :: sp1y , ep1y , sp2y , ep2y , sp3y , ep3y , &
+                            sm1y , em1y , sm2y , em2y , sm3y , em3y
+      INTEGER  :: id  , domdesc , parent_id , parent_domdesc
+
+      TYPE(domain), POINTER :: parent
+      end subroutine wrf_dm_patch_domain
+   END INTERFACE
+
+
    CALL nl_get_spec_bdy_width( 1, spec_bdy_width )
 
 #ifndef DM_PARALLEL
@@ -467,7 +506,7 @@ CONTAINS
 ! case it generates a circular USE reference, since module_dm uses
 ! module_domain.  JM 20020416
 
-   CALL wrf_dm_patch_domain( id , domdesc , parent_id , parent_domdesc , &
+   CALL wrf_dm_patch_domain( id , domdesc , parent, parent_id,parent_domdesc,&
                              sd1 , ed1 , sp1 , ep1 , sm1 , em1 , &
                              sd2 , ed2 , sp2 , ep2 , sm2 , em2 , &
                              sd3 , ed3 , sp3 , ep3 , sm3 , em3 , &
@@ -1062,7 +1101,7 @@ CONTAINS
       IMPLICIT NONE
 #include "streams.h"
       INTEGER              , INTENT(IN  )  :: id
-      TYPE(domain), POINTER                :: grid
+      TYPE(domain)                :: grid
       ! Local
       TYPE(fieldlist), POINTER :: p, q
       INTEGER, PARAMETER :: read_unit = 10
@@ -1565,13 +1604,14 @@ CONTAINS
 !  (so the one in the middle can be removed).  Then the domain itself is 
 !  DEALLOCATEd via a call to domain_destroy().  
 
-   SUBROUTINE dealloc_space_domain ( id )
+   SUBROUTINE dealloc_space_domain ( id, head_grid_in )
       
       IMPLICIT NONE
 
       !  Input data.
 
       INTEGER , INTENT(IN)            :: id
+      TYPE(domain) , POINTER          :: head_grid_in
 
       !  Local data.
 
@@ -1580,8 +1620,8 @@ CONTAINS
 
       !  Initializations required to start the routine.
 
-      grid => head_grid
-      old_grid => head_grid
+      grid => head_grid_in
+      old_grid => head_grid_in
       found = .FALSE.
 
       !  The identity of the domain to delete is based upon the "id".
@@ -3142,13 +3182,12 @@ END SUBROUTINE get_current_grid_name
 
 ! version of this routine that can be called from set_scalar_indices_from_config in
 ! module_configure, which can not USE module_domain without creating a circular use assocaition
-   SUBROUTINE modify_io_masks ( id )
-     USE module_domain, ONLY : domain, modify_io_masks1, head_grid, find_grid_by_id
+   SUBROUTINE modify_io_masks ( grid )
+     USE module_domain, ONLY : domain, modify_io_masks1 !, find_grid_by_id
      IMPLICIT NONE
-     INTEGER, INTENT(IN) :: id
-     TYPE(domain), POINTER :: grid
-     CALL find_grid_by_id( id, head_grid, grid )
-     IF ( ASSOCIATED( grid ) ) CALL modify_io_masks1( grid, id ) 
+     TYPE(domain) :: grid
+!     CALL find_grid_by_id( id, head_grid, grid )
+      CALL modify_io_masks1( grid, grid%id ) 
      RETURN 
    END SUBROUTINE modify_io_masks
 

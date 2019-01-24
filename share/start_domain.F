@@ -38,7 +38,7 @@ SUBROUTINE start_domain ( grid , allowed_to_read )
 #endif
    END INTERFACE
 
-   CALL set_scalar_indices_from_config ( head_grid%id , idum1, idum2 )
+   CALL set_scalar_indices_from_config ( head_grid_id , idum1, idum2 )
 
 #if ((EM_CORE == 1) && (DA_CORE != 1))
 

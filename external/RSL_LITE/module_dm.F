@@ -256,9 +256,17 @@ CONTAINS
                                 bdx , bdy )
 
 #if ( ( defined(SGIALTIX) || defined(FUJITSU_FX10) || defined(KEEP_INT_AROUND) ) && (! defined(MOVE_NESTS) ) )
-      USE module_domain, ONLY : domain, head_grid, find_grid_by_id, alloc_space_field
+#if (JEDI == 1)
+      USE module_domain, ONLY : domain, find_grid_by_id, alloc_space_field
 #else
-      USE module_domain, ONLY : domain, head_grid, find_grid_by_id
+      USE module_domain, ONLY : domain, head_grid, find_grid_by_id, alloc_space_field
+#endif
+#else
+#if (JEDI == 1)
+      USE module_domain, ONLY : domain, find_grid_by_id
+#else
+      USE module_domain, ONLY : domain, head grid, find_grid_by_id
+#endif
 #endif
 
       IMPLICIT NONE
@@ -834,8 +842,11 @@ CONTAINS
 #if ( EM_CORE == 1 && DA_CORE != 1 )
          intermediate_grid%active_this_task = .true.
 #endif
+#if (JEDI == 1)
+         CALL find_grid_by_id ( id, parent, nest_grid )
+#else
          CALL find_grid_by_id ( id, head_grid, nest_grid )
-
+#endif
          nest_grid%intermediate_grid => intermediate_grid  ! nest grid now has a pointer to this baby
          intermediate_grid%parents(1)%ptr => nest_grid     ! the intermediate grid considers nest its parent
          intermediate_grid%num_parents = 1
@@ -2582,7 +2593,11 @@ END MODULE module_dm
 ! wrf_dm_patch_domain has to be outside the module because it is called
 ! by a routine in module_domain but depends on module domain
 
+#if (JEDI == 1)
+SUBROUTINE wrf_dm_patch_domain ( id  , domdesc , parent,parent_id , parent_domdesc ,&
+#else
 SUBROUTINE wrf_dm_patch_domain ( id  , domdesc , parent_id , parent_domdesc , &
+#endif
                           sd1 , ed1 , sp1 , ep1 , sm1 , em1 , &
                           sd2 , ed2 , sp2 , ep2 , sm2 , em2 , &
                           sd3 , ed3 , sp3 , ep3 , sm3 , em3 , &
@@ -2593,7 +2608,11 @@ SUBROUTINE wrf_dm_patch_domain ( id  , domdesc , parent_id , parent_domdesc , &
                                       sp2y , ep2y , sm2y , em2y , &
                                       sp3y , ep3y , sm3y , em3y , &
                           bdx , bdy )
+#if (JEDI == 1)
+   USE module_domain, ONLY : domain
+#else
    USE module_domain, ONLY : domain, head_grid, find_grid_by_id
+#endif
    USE module_dm, ONLY : patch_domain_rsl_lite  !, push_communicators_for_domain, pop_communicators_for_domain
    IMPLICIT NONE
 
@@ -2607,16 +2626,20 @@ SUBROUTINE wrf_dm_patch_domain ( id  , domdesc , parent_id , parent_domdesc , &
    INTEGER, INTENT(INOUT):: id  , domdesc , parent_id , parent_domdesc
 
    TYPE(domain), POINTER :: parent
+#if (JEDI != 1)
    TYPE(domain), POINTER :: grid_ptr
+#endif
 
    ! this is necessary because we cannot pass parent directly into
    ! wrf_dm_patch_domain because creating the correct interface definitions
    ! would generate a circular USE reference between module_domain and module_dm
    ! see comment this date in module_domain for more information. JM 20020416
 
+#if (JEDI != 1)
    NULLIFY( parent )
    grid_ptr => head_grid
    CALL find_grid_by_id( parent_id , grid_ptr , parent )
+#endif
 
    CALL push_communicators_for_domain(id)
 
