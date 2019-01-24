@@ -5,9 +5,11 @@ MODULE module_integrate
 
 CONTAINS
 
-RECURSIVE SUBROUTINE integrate ( gridid,head_grid_in )
-
-
+#if ( JEDI != 1 )
+RECURSIVE SUBROUTINE integrate ( grid )
+#else
+RECURSIVE SUBROUTINE integrate ( gridid, head_grid_in )
+#endif
 
    USE module_domain
    USE module_driver_constants
@@ -32,9 +34,11 @@ RECURSIVE SUBROUTINE integrate ( gridid,head_grid_in )
 
    !  Input data.
 
-   TYPE(domain) , POINTER :: grid     ! get it from head_grid_in
+   TYPE(domain) , POINTER :: grid
+#if ( JEDI == 1 )
    TYPE(domain) , POINTER :: head_grid_in
    INTEGER, intent(in) :: gridid
+#endif
 
 ! module_integrate:integrate
 ! <DESCRIPTION> 
@@ -312,10 +316,12 @@ RECURSIVE SUBROUTINE integrate ( gridid,head_grid_in )
 
    END INTERFACE
 
+   #if ( JEDI == 1 )
    !  get grid ased on ID 
    CALL wrf_debug( 100 , 'module_integrate: calling find_grid_by_id ' )
    CALL find_grid_by_id ( gridid, head_grid_in, grid )
    CALL wrf_debug( 100 , 'module_integrate: after calling find_grid_by_id ' )
+   #endif
 
    ! This allows us to reference the current grid from anywhere beneath 
    ! this point for debugging purposes.  
@@ -415,7 +421,10 @@ ENDIF
 IF ( grid%active_this_task ) THEN
               CALL med_after_solve_io ( grid , config_flags )
 ENDIF
+
+#if ( JEDI == 1 )
             head_grid_current_time=domain_get_current_time(head_grid_in)
+#endif
             grid_ptr => grid
             DO WHILE ( ASSOCIATED( grid_ptr ) )
                DO kid = 1, max_nests
@@ -437,9 +446,12 @@ ENDIF
                    CALL set_current_grid_ptr( grid_ptr%nests(kid)%ptr )
                    WRITE(message,*)grid%id,' module_integrate: recursive call to integrate '
                    CALL wrf_debug( 100 , message )
-!                     CALL integrate ( grid_ptr%nests(kid)%ptr,head_grid_in ) 
-                      nestid=grid_ptr%nests(kid)%ptr%id
-                      CALL integrate ( nestid,head_grid_in ) 
+#if ( JEDI != 1 )
+                      CALL integrate ( grid_ptr%nests(kid)%ptr )
+#else
+                      nestid = grid_ptr%nests(kid)%ptr%id
+                      CALL integrate ( nestid, head_grid_in )
+#endif
                    WRITE(message,*)grid%id,' module_integrate: back from recursive call to integrate '
                    CALL wrf_debug( 100 , message )
                  ENDIF
@@ -448,7 +460,11 @@ ENDIF
                DO kid = 1, max_nests
                  IF ( ASSOCIATED( grid_ptr%nests(kid)%ptr ) ) THEN
                    CALL set_current_grid_ptr( grid_ptr%nests(kid)%ptr )
+#if ( JEDI != 1 )
+                   IF ( .NOT. ( domain_clockisstoptime(head_grid              ) .OR. &
+#else
                    IF ( .NOT. ( domain_clockisstoptime(head_grid_in              ) .OR. &
+#endif
                                 domain_clockisstoptime(grid                   ) .OR. &
                                 domain_clockisstoptime(grid_ptr%nests(kid)%ptr) ) )  THEN
                      CALL wrf_debug( 100 , 'module_integrate: calling med_nest_feedback ' )
@@ -456,7 +472,11 @@ ENDIF
                      CALL wrf_debug( 100 , 'module_integrate: back from med_nest_feedback ' )
                    END IF
 #ifdef MOVE_NESTS
+#if ( JEDI != 1 )
+                   IF ( .NOT. domain_clockisstoptime( head_grid ) ) THEN
+#else
                    IF ( .NOT. domain_clockisstoptime( head_grid_in ) ) THEN
+#endif
                      CALL med_nest_move ( grid_ptr , grid_ptr%nests(kid)%ptr )
                      may_have_moved = .TRUE.
                    ENDIF
@@ -522,7 +542,11 @@ ENDIF ! active_this_task
             IF ( grid%active_this_task ) CALL med_last_solve_io ( grid , config_flags )
          ELSE
 ! zip up the tree and see if any ancestor is at its stop time
+#if ( JEDI != 1 )
+            should_do_last_io = domain_clockisstoptime( head_grid )
+#else
             should_do_last_io = domain_clockisstoptime( head_grid_in )
+#endif
             grid_ptr => grid 
             DO WHILE ( grid_ptr%id .NE. 1 )
                IF ( domain_clockisstoptime( grid_ptr ) ) THEN

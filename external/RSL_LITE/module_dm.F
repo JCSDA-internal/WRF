@@ -847,6 +847,7 @@ CONTAINS
 #else
          CALL find_grid_by_id ( id, head_grid, nest_grid )
 #endif
+
          nest_grid%intermediate_grid => intermediate_grid  ! nest grid now has a pointer to this baby
          intermediate_grid%parents(1)%ptr => nest_grid     ! the intermediate grid considers nest its parent
          intermediate_grid%num_parents = 1
