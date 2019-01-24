@@ -1624,7 +1624,9 @@ CONTAINS
       !  Input data.
 
       INTEGER , INTENT(IN)            :: id
+#if ( JEDI == 1 )
       TYPE(domain) , POINTER          :: head_grid_in
+#endif
 
       !  Local data.
 
@@ -3207,7 +3209,7 @@ END SUBROUTINE get_current_grid_name
      INTEGER, INTENT(IN) :: id	
      TYPE(domain), POINTER :: grid
      CALL find_grid_by_id( id, head_grid, grid )
-     IF ( ASSOCIATED( grid ) ) CALL modify_io_masks1( grid, grid%id ) 
+     IF ( ASSOCIATED( grid ) ) CALL modify_io_masks1( grid, id ) 
      RETURN 
    END SUBROUTINE modify_io_masks
 #else
