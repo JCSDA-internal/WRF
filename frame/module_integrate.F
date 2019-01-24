@@ -316,12 +316,12 @@ RECURSIVE SUBROUTINE integrate ( gridid, head_grid_in )
 
    END INTERFACE
 
-   #if ( JEDI == 1 )
+#if ( JEDI == 1 )
    !  get grid ased on ID 
    CALL wrf_debug( 100 , 'module_integrate: calling find_grid_by_id ' )
    CALL find_grid_by_id ( gridid, head_grid_in, grid )
    CALL wrf_debug( 100 , 'module_integrate: after calling find_grid_by_id ' )
-   #endif
+#endif
 
    ! This allows us to reference the current grid from anywhere beneath 
    ! this point for debugging purposes.  

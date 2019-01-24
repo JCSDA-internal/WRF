@@ -507,11 +507,11 @@ CONTAINS
 ! case it generates a circular USE reference, since module_dm uses
 ! module_domain.  JM 20020416
 
-  #if ( JEDI != 1 )
+#if ( JEDI != 1 )
    CALL wrf_dm_patch_domain( id , domdesc , parent_id , parent_domdesc , &
-  #else
+#else
    CALL wrf_dm_patch_domain( id , domdesc , parent , parent_id , parent_domdesc , &
-  #endif
+#endif
                              sd1 , ed1 , sp1 , ep1 , sm1 , em1 , &
                              sd2 , ed2 , sp2 , ep2 , sm2 , em2 , &
                              sd3 , ed3 , sp3 , ep3 , sm3 , em3 , &
