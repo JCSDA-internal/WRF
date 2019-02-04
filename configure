@@ -656,6 +656,18 @@ if [ "$wrf_core" = "DA_CORE" -o "$wrf_core" = "WRF_PLUS_CORE" -o "$wrf_core" = "
   fi
 fi
 
+if [ "$wrf_core" = "WRF_JEDI_CORE" ]; then
+  if [ "`grep '^SFC' configure.wrf | grep -i 'gfortran'`" != "" -o "`grep '^SFC' configure.wrf | grep -i 'frtpx'`" != "" ]; then
+    echo "WRF JEDI using gfortran/frtpx needs -fPIC"
+    sed -i '/^LDFLAGS_LOCAL/ s/$/ -fPIC/' configure.wrf
+    sed -i '/^SFC/ s/$/ -fPIC/' configure.wrf
+    sed -i '/^SCC/ s/$/ -fPIC/' configure.wrf
+    sed -i '/^CCOMP/ s/$/ -fPIC/' configure.wrf
+    sed -i '/^DM_FC/ s/$/ -fPIC/' configure.wrf
+    sed -i '/^DM_CC/ s/$/ -fPIC/' configure.wrf
+  fi
+fi
+
 if [ -n "$WRFPLUS" ] ; then
   if [ $WRFPLUS = 1 ] ; then
     if [ `grep '^SFC' configure.wrf | cut -d= -f2` = "gfortran" ]; then
