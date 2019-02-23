@@ -104,7 +104,11 @@
     WRITE(wrf_err_message,*)'output_wrf: begin, fid = ',fid
     CALL wrf_debug( 300 , wrf_err_message )
 
+#if ( JEDI != 1 )
     CALL modify_io_masks ( grid%id )   ! this adjusts the I/O masks according to the users run-time specs, if any
+#else
+    CALL modify_io_masks ( grid )   ! this adjusts the I/O masks according to the users run-time specs, if any
+#endif
 
     CALL wrf_inquire_filename ( fid , fname , filestate , ierr )
     IF ( ierr /= 0 ) THEN
