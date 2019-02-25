@@ -6849,7 +6849,11 @@ IMPLICIT NONE
 !  the total number of g-points from 256 to 140 for use in the CCM.              
 ! **************************************************************************     
         IF ( wrf_dm_on_monitor() ) THEN
+#if ( JEDI != 1 )
           OPEN(rrtm_unit,FILE='RRTM_DATA',                  &
+#else
+          OPEN(rrtm_unit,FILE='RRTM_DATA', CONVERT='big_endian', &
+#endif
                FORM='UNFORMATTED',STATUS='OLD',ERR=9009)
         ENDIF
                                                                                  

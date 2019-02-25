@@ -12903,7 +12903,11 @@ IMPLICIT NONE
       ENDIF
 
       IF ( wrf_dm_on_monitor() ) THEN
+#if ( JEDI != 1 )
         OPEN(rrtmg_unit,FILE='RRTMG_LW_DATA',                  &
+#else
+        OPEN(rrtmg_unit,FILE='RRTMG_LW_DATA', CONVERT='big_endian', &
+#endif
              FORM='UNFORMATTED',STATUS='OLD',ERR=9009)
       ENDIF
 
